@@ -58,3 +58,5 @@ RUN go mod download && \
 
 ENTRYPOINT ["/bin/bash"]
 CMD ["/app/docker-entrypoint.sh"]
+
+HEALTHCHECK CMD curl -s http://localhost:8080/healthcheck | grep -q ok
