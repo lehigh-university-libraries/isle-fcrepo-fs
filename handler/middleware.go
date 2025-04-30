@@ -11,6 +11,7 @@ import (
 
 	"github.com/lestrrat-go/httprc/v3"
 	"github.com/lestrrat-go/httprc/v3/tracesink"
+	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/lestrrat-go/jwx/v3/jwt"
 )
@@ -80,15 +81,31 @@ func verifyJWT(tokenString string) error {
 	if keySet == nil {
 		return fmt.Errorf("keySet not initialized")
 	}
+	// islandora will only ever provide a single key to sign JWTs
+	// so just use the one key in JWKS
+	key, ok := keySet.Key(0)
+	if !ok {
+		return fmt.Errorf("no key in jwks")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := jwt.Parse([]byte(tokenString),
-		jwt.WithKeySet(keySet),
-		jwt.WithVerify(true),
-		jwt.WithContext(ctx),
-	)
+	var err error
+	if keySet.Len() > 1 {
+		_, err = jwt.Parse([]byte(tokenString),
+			jwt.WithContext(ctx),
+			jwt.WithKeySet(keySet),
+			jwt.WithVerify(true),
+		)
+	} else {
+		_, err = jwt.Parse([]byte(tokenString),
+			jwt.WithContext(ctx),
+			jwt.WithKey(jwa.RS256(), key),
+			jwt.WithVerify(true),
+		)
+	}
+
 	if err != nil {
 		return fmt.Errorf("unable to parse/verify token: %v", err)
 	}
