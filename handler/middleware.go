@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -46,7 +47,7 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url := "http://drupal/_flysystem/fedora" + r.URL.Path
+		url := fmt.Sprintf("https://%s/_flysystem/fedora%s", os.Getenv("DOMAIN"), r.URL.Path)
 		req, err := http.NewRequest(http.MethodHead, url, nil)
 		if err != nil {
 			slog.Error("Unable to create request", "url", url, "err", err)
