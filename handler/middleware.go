@@ -1,21 +1,10 @@
 package handler
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"strings"
 	"time"
-
-	"github.com/lestrrat-go/httprc/v3"
-	"github.com/lestrrat-go/httprc/v3/tracesink"
-	"github.com/lestrrat-go/jwx/v3/jwk"
-	"github.com/lestrrat-go/jwx/v3/jwt"
 )
-
-var keySet jwk.Set
 
 // LoggingMiddleware logs incoming HTTP requests
 func LoggingMiddleware(next http.Handler) http.Handler {
@@ -55,77 +44,33 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// JWTAuthMiddleware validates a JWT token and adds claims to the context
-func JWTAuthMiddleware(next http.Handler) http.Handler {
+func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a := r.Header.Get("Authorization")
-		if a == "" || !strings.HasPrefix(strings.ToLower(a), "bearer ") {
-			http.Error(w, "Missing Authorization header", http.StatusBadRequest)
+		url := "http://drupal/_flysystem/fedora" + r.URL.Path
+		req, err := http.NewRequest(http.MethodHead, url, nil)
+		if err != nil {
+			slog.Error("Unable to create request", "url", url, "err", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
+		for key, values := range r.Header {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
+		}
 
-		tokenString := a[7:]
-		err := verifyJWT(tokenString)
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
-			slog.Error("JWT verification failed", "err", err)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			http.Error(w, "Bad Gateway", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, "Not authorized", resp.StatusCode)
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-func verifyJWT(tokenString string) error {
-	if keySet == nil {
-		return fmt.Errorf("keySet not initialized")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err := jwt.Parse([]byte(tokenString),
-		jwt.WithKeySet(keySet),
-		jwt.WithVerify(true),
-		jwt.WithContext(ctx),
-	)
-	if err != nil {
-		return fmt.Errorf("unable to parse/verify token: %v", err)
-	}
-
-	return nil
-}
-
-// fetchJWKS fetches the JSON Web Key Set (JWKS) from the given URI
-func FetchJWKS() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	c, err := jwk.NewCache(
-		ctx,
-		httprc.NewClient(
-			httprc.WithTraceSink(tracesink.NewSlog(slog.New(slog.NewTextHandler(os.Stderr, nil)))),
-		),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create cache: %s", err)
-	}
-
-	jwksURI := os.Getenv("JWKS_URI")
-	if err := c.Register(
-		ctx,
-		jwksURI,
-		jwk.WithMaxInterval(24*time.Hour*7),
-		jwk.WithMinInterval(24*time.Hour),
-	); err != nil {
-		return err
-	}
-
-	cached, err := c.CachedSet(jwksURI)
-	if err != nil {
-		return fmt.Errorf("failed to get cached keyset: %s", err)
-	}
-	keySet = cached
-
-	return nil
 }

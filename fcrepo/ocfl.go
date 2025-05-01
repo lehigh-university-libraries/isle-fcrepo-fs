@@ -25,7 +25,7 @@ func getOCFLDir(objectID string) string {
 
 	tupleSize := 3
 	numberOfTuples := 3
-	base := "/fcrepo"
+	base := os.Getenv("OCFL_ROOT")
 	var builder strings.Builder
 	builder.WriteString(base)
 
