@@ -14,6 +14,10 @@ func main() {
 		slog.Error("OCFL_ROOT is required. e.g. OCFL_ROOT=/opt/ocfl")
 		os.Exit(1)
 	}
+	if os.Getenv("DOMAIN") == "" {
+		slog.Error("DOMAIN is required. e.g. DOMAIN=preserve.lehigh.edu")
+		os.Exit(1)
+	}
 
 	// create a healthcheck with no middleware/auth
 	r := mux.NewRouter()
