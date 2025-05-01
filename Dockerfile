@@ -10,7 +10,9 @@ ARG \
   # renovate: datasource=repology depName=alpine_3_21/dpkg
   DPKG_VERSION="1.22.11-r0" \
   # renovate: datasource=repology depName=alpine_3_21/gnupg
-  GNUPG_VERSION="2.4.7-r0"
+  GNUPG_VERSION="2.4.7-r0" \
+  # renovate: datasource=repology depName=alpine_3_21/curl
+  CURL_VERSION="8.12.1-r1" 
 
 # renovate: datasource=github-releases depName=gosu packageName=tianon/gosu
 ENV GOSU_VERSION=1.17
@@ -33,6 +35,10 @@ RUN apk add --no-cache --virtual .gosu-deps \
 WORKDIR /app
 
 RUN adduser -S -G nobody isle-fcrepo-fs
+
+RUN apk update && \
+    apk add --no-cache \
+       curl=="${CURL_VERSION}"
 
 COPY . ./
 
