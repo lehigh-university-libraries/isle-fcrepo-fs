@@ -43,3 +43,5 @@ RUN go mod download && \
   go clean -cache -modcache
 
 ENTRYPOINT ["/app/isle-fcrepo-fs"]
+
+HEALTHCHECK CMD curl -s http://localhost:8080/healthcheck | grep -q ok
