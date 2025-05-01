@@ -1,3 +1,3 @@
 # isle-fcrepo-fs
 
-JWT auth to serve files in OCFL
+Serve files directly from OCFL

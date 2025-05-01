@@ -10,13 +10,7 @@ ARG \
   # renovate: datasource=repology depName=alpine_3_21/dpkg
   DPKG_VERSION="1.22.11-r0" \
   # renovate: datasource=repology depName=alpine_3_21/gnupg
-  GNUPG_VERSION="2.4.7-r0" \
-  # renovate: datasource=repology depName=alpine_3_21/curl
-  CURL_VERSION="8.12.1-r1" \
-  # renovate: datasource=repology depName=alpine_3_21/bash
-  BASH_VERSION="5.2.37-r0" \
-  # renovate: datasource=repology depName=alpine_3_21/openssl
-  OPENSSL_VERSION="3.3.3-r0"
+  GNUPG_VERSION="2.4.7-r0"
 
 # renovate: datasource=github-releases depName=gosu packageName=tianon/gosu
 ENV GOSU_VERSION=1.17
@@ -40,23 +34,14 @@ WORKDIR /app
 
 RUN adduser -S -G nobody isle-fcrepo-fs
 
-RUN apk update && \
-    apk add --no-cache \
-      curl=="${CURL_VERSION}" \
-      bash=="${BASH_VERSION}" \
-      ca-certificates=="${CA_CERTIFICATES_VERSION}" \
-      openssl=="${OPENSSL_VERSION}"
-
 COPY . ./
 
 RUN chown -R isle-fcrepo-fs:nobody /app
 
 RUN go mod download && \
   go build -o /app/isle-fcrepo-fs && \
-  go clean -cache -modcache && \
-  ./ca-certs.sh
+  go clean -cache -modcache
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/isle-fcrepo-fs"]
 
 HEALTHCHECK CMD curl -s http://localhost:8080/healthcheck | grep -q ok
