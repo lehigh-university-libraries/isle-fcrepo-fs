@@ -6,7 +6,7 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 ARG \
   # renovate: datasource=repology depName=alpine_3_21/ca-certificates
-  CA_CERTIFICATES_VERSION="20241121-r1" \
+  CA_CERTIFICATES_VERSION="20250619-r0" \
   # renovate: datasource=repology depName=alpine_3_21/dpkg
   DPKG_VERSION="1.22.11-r0" \
   # renovate: datasource=repology depName=alpine_3_21/gnupg
@@ -16,10 +16,10 @@ ARG \
   # renovate: datasource=repology depName=alpine_3_21/bash
   BASH_VERSION="5.2.37-r0" \
   # renovate: datasource=repology depName=alpine_3_21/openssl
-  OPENSSL_VERSION="3.3.4-r0"
+  OPENSSL_VERSION="3.3.4-r0" \
+  # renovate: datasource=github-releases depName=gosu packageName=tianon/gosu
+  GOSU_VERSION=1.17
 
-# renovate: datasource=github-releases depName=gosu packageName=tianon/gosu
-ENV GOSU_VERSION=1.17
 RUN apk add --no-cache --virtual .gosu-deps \
     ca-certificates=="${CA_CERTIFICATES_VERSION}" \
     dpkg=="${DPKG_VERSION}" \
