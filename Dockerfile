@@ -1,4 +1,4 @@
-FROM golang:1.25-alpine3.21@sha256:331bde41663c297cba0f5abf37e929be644f3cbd84bf45f49b0df9d774f4d912
+FROM golang:1.25-alpine3.21@sha256:3289aac2aac769e031d644313d094dbda745f28af81cd7a94137e73eefd58b33
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ ARG \
   # renovate: datasource=repology depName=alpine_3_21/openssl
   OPENSSL_VERSION="3.3.4-r0" \
   # renovate: datasource=github-releases depName=gosu packageName=tianon/gosu
-  GOSU_VERSION=1.17
+  GOSU_VERSION=1.19
 
 RUN apk add --no-cache --virtual .gosu-deps \
     ca-certificates=="${CA_CERTIFICATES_VERSION}" \
